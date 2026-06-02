@@ -3,9 +3,7 @@ import pandas as pd
 AIRPORTS = r"C:\Users\admin\Desktop\project_bi\data\raw\airports\airports_us_matched.csv"
 WEATHER  = r"C:\Users\admin\Desktop\project_bi\data\raw\weather\weather_raw.csv"
 
-# ============================================================
-# OurAirports
-# ============================================================
+
 df_ap = pd.read_csv(AIRPORTS)
 
 print("=" * 60)
@@ -19,9 +17,7 @@ print(df_ap.isnull().sum()[df_ap.isnull().sum() > 0])
 print(f"\nTypy lotnisk:\n{df_ap['type'].value_counts()}")
 print(f"\nUnikalne strefy czasowe:\n{df_ap['timezone'].value_counts()}")
 
-# ============================================================
-# Open-Meteo
-# ============================================================
+
 df_w = pd.read_csv(WEATHER)
 
 print("\n" + "=" * 60)
