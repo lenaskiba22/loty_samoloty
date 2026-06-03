@@ -5,11 +5,11 @@ import os
 import glob
 from timezonefinder import TimezoneFinder
 
+BTS_FOLDER   = r"C:\Users\Magda\Desktop\project_bi\data\raw\bts"
+AIRPORTS_CSV = r"C:\Users\Magda\Desktop\project_bi\data\raw\airports\airports.csv"
+WEATHER_OUT  = r"C:\Users\Magda\Desktop\project_bi\data\raw\weather"
+AIRPORTS_OUT = r"C:\Users\Magda\Desktop\project_bi\data\raw\airports"
 
-BTS_FOLDER   = r"C:\Users\admin\Desktop\project_bi\data\raw\bts"
-AIRPORTS_CSV = r"C:\Users\admin\Desktop\project_bi\data\raw\airports\airports.csv"
-WEATHER_OUT  = r"C:\Users\admin\Desktop\project_bi\data\raw\weather"
-AIRPORTS_OUT = r"C:\Users\admin\Desktop\project_bi\data\raw\airports"
 os.makedirs(WEATHER_OUT, exist_ok=True)
 
 print("pliki BTS")
@@ -21,6 +21,18 @@ origins = set(df_bts['ORIGIN'].dropna().unique())
 dests   = set(df_bts['DEST'].dropna().unique())
 all_airports_iata = origins.union(dests)
 print(f"Unikalnych lotnisk w BTS: {len(all_airports_iata)}")
+
+
+#tu zakres dat z bts żeby można było dokładać
+print("Wyznaczam zakres dat z plików BTS...")
+dates = pd.to_datetime(df_bts['FL_DATE'], format='mixed')
+start_date = dates.min().strftime('%Y-%m-%d')
+end_date   = dates.max().strftime('%Y-%m-%d')
+print(f"Zakres dat: {start_date} → {end_date}")
+
+DATE_RANGES = [(start_date, end_date)]
+
+
 
 print("OurAirports")
 df_ap = pd.read_csv(AIRPORTS_CSV, low_memory=False)
@@ -57,20 +69,21 @@ print(f"Zapisano: airports_us_matched.csv")
 print(df_us[['iata_code','name','municipality','state','latitude_deg','longitude_deg','timezone']].head(5).to_string())
 
 
-DATE_RANGES = [
-    ("2022-07-01", "2022-09-30"),
-    ("2023-07-01", "2023-09-30"),
-]
 
 all_weather = []
 
 print(f"\npogoda dla {len(df_us)} lotnisk")
+print(f"Zakres: {start_date} → {end_date}\n")
 
 for i, row in df_us.iterrows():
     iata     = row['iata_code']
     lat      = row['latitude_deg']
     lon      = row['longitude_deg']
-    timezone = row['timezone'] if pd.notna(row['timezone']) else 'America/New_York'
+    timezone = row['timezone'] if pd.notna(row['timezone']) else None
+
+    if timezone is None:
+        print(f"{iata}: brak strefy czasowej-pominięte")
+        continue
 
     for start_date, end_date in DATE_RANGES:
         url = "https://archive-api.open-meteo.com/v1/archive"
@@ -114,11 +127,12 @@ for i, row in df_us.iterrows():
 
 
 if all_weather:
-    df_weather_all = pd.concat(all_weather, ignore_index=True)
+    df_weather_new = pd.concat(all_weather, ignore_index=True)
     out_path = os.path.join(WEATHER_OUT, "weather_raw.csv")
-    df_weather_all.to_csv(out_path, index=False)
-    print(f"\n Zapisano: weather_raw.csv")
-    print(f"   Rekordów:  {len(df_weather_all):,}")
-    print(f"   Kolumny:   {list(df_weather_all.columns)}")
+
+    df_weather_new.to_csv(out_path, index=False)
+    print(f"Zapisano: weather_raw.csv")
+    print(f"Rekordów: {len(df_weather_new):,}")
+    print(f"Zakres:   {start_date} → {end_date}")
 else:
-    print("brak danych do zapisania.")
+    print("Brak danych do zapisania.")

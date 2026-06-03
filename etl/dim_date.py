@@ -31,7 +31,8 @@ def load_dim_date():
     df['is_weekend']  = (df_dates.dt.dayofweek >= 5).astype(int)
 
     #święta federalne USA z biblioteki holidays
-    us_holidays = holidays.US(years=[2022, 2023])
+    years = df_dates.dt.year.unique().tolist()
+    us_holidays = holidays.US(years=years)
     df['is_us_holiday'] = df['flight_date'].apply(
         lambda d: 1 if d in us_holidays else 0
     )

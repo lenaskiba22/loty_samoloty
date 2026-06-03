@@ -1,4 +1,3 @@
-# etl/dim_airline.py
 import pandas as pd
 import glob
 import os
@@ -62,7 +61,7 @@ def load_dim_airline():
     airlines = airlines.drop_duplicates(subset=["airline_code"])
     airlines = airlines.sort_values("airline_code").reset_index(drop=True)
 
-    #WERYFIKACJA
+    #weryfikacja
     print(f"\nWynik transformacji:")
     print(airlines.to_string(index=False))
     print(f"\nLiczba linii do załadowania: {len(airlines)}")

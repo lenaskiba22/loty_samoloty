@@ -1,5 +1,4 @@
 import pyodbc
-import pandas as pd
 from config import CONN_STR
 
 def get_connection():
