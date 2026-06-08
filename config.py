@@ -1,3 +1,8 @@
+import os
+
+# to powinnyście dopasować do swojej ścieżki z danymi
+DATA_ROOT = r"C:\Users\admin\Desktop\project_bi_2\project_bi\data\raw"
+
 CONN_STR = (
     "DRIVER={SQL Server};"
     "SERVER=localhost;"
@@ -6,8 +11,9 @@ CONN_STR = (
 )
 
 PATHS = {
-    "bts":      r"C:\Users\Magda\Desktop\project_bi\data\raw\bts",
-    "airports": r"C:\Users\Magda\Desktop\project_bi\data\raw\airports\airports_us_matched.csv",
-    "weather":  r"C:\Users\Magda\Desktop\project_bi\data\raw\weather\weather_raw.csv",
-    "airlines": r"C:\Users\Magda\Desktop\project_bi\data\raw\airports\iata_airlines.csv",
+    "bts":      os.path.join(DATA_ROOT, "bts"),
+    "airports": os.path.join(DATA_ROOT, "airports", "airports_us_matched.csv"),
+    "weather":  os.path.join(DATA_ROOT, "weather", "weather_raw.csv"),
+    "airlines": os.path.join(DATA_ROOT, "airports", "iata_airlines.csv"),
+    "airports_full": os.path.join(DATA_ROOT, "airports", "airports.csv"),
 }
