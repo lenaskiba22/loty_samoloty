@@ -1,0 +1,80 @@
+services:
+  airflow:
+    build: .
+    container_name: airflow-standalone
+    environment:
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
+      # [DODANE] pakiet etl/ widoczny dla Airflow
+      - PYTHONPATH=/opt/airflow/project
+      # [DODANE] połączenie do SQL Server (używane w etl/utils.py przez get_connection())
+      - MSSQL_HOST=sqlserver
+      - MSSQL_PORT=1433
+      - MSSQL_USER=sa
+      - MSSQL_PASSWORD=YourStrong!Pass123
+      - MSSQL_DB=flight_dw
+      - DATA_BASE_PATH=/opt/airflow/data/raw
+    volumes:
+      # DAGi
+      - ./dags:/opt/airflow/dags
+      # [DODANE] cały projekt (etl/, config.py itd.) widoczny w kontenerze
+      - .:/opt/airflow/project
+      # [DODANE] dane BTS i inne raw data
+      - ./data:/opt/airflow/data
+    ports:
+      - "8080:8080"
+    command: standalone
+    depends_on:
+      postgres:
+        condition: service_healthy
+      # [DODANE] czekaj aż SQL Server będzie gotowy
+      sqlserver:
+        condition: service_healthy
+
+  # We use Postgres as the backend for "LocalExecutor" stability
+  # (Standard sqlite doesn't support parallelism well)
+  postgres:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver
+    user: root # Required to ensure it can read the mounted backup volume
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=YourStrong!Pass123
+      - MSSQL_PID=Developer
+    ports:
+      - "2433:1433"
+    volumes:
+      - ./backup:/var/opt/mssql/backup
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'YourStrong!Pass123' -C -Q 'SELECT 1'"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  # --- The Automator: SQL Init Service ---
+  sql-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver-init
+    volumes:
+      - ./restore_db.sql:/restore_db.sql
+      - ./backup:/var/opt/mssql/backup
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    entrypoint: >
+      /bin/bash -c "
+      /opt/mssql-tools18/bin/sqlcmd -S sqlserver -U sa -P 'YourStrong!Pass123' -C -i /restore_db.sql;
+      echo 'Database Restore Complete.';"
