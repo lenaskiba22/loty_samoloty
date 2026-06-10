@@ -113,7 +113,8 @@ def load_Fact_Flights():
         "taxi_out", "taxi_in",
         "elapsed_time",
         "crs_elapsed_time", "air_time",
-        "distance",
+        "distance", "dep_hour",
+        "time_block",
         "cancelled", "cancellation_code",
         "cancellation_reason",
         "diverted",
@@ -152,6 +153,18 @@ def load_Fact_Flights():
             # godzina odlotu z CRS_DEP_TIME (HHMM -> H), 2400 -> 0
             dep_time    = df["CRS_DEP_TIME"].fillna(0).astype(int)
             df["dep_hour"] = (dep_time // 100).replace(24, 0).clip(0, 23)
+
+            def get_time_block(h):
+                if 0 <= h <= 5:
+                    return 'Night'
+                elif h <= 11:
+                    return 'Morning'
+                elif h <= 17:
+                    return 'Afternoon'
+                else:
+                    return 'Evening'
+
+            df["time_block"] = df["dep_hour"].apply(get_time_block)
 
             # filtrowanie FK: usuń loty z nieznanym ORIGIN lub DEST
             before = len(df)

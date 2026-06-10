@@ -1,9 +1,11 @@
+# etl/dim_weather.py
 import pandas as pd
 from etl.utils import get_connection, truncate_and_load
+import glob
 
-def load_dim_weather():
-    print("Dim_Weather")
-    conn = get_connection()
+def load_dim_weather(files: list[str] | None = None):
+    print("=== Dim_Weather ===")
+
 
     weather_categories = pd.DataFrame([
         {
@@ -16,9 +18,9 @@ def load_dim_weather():
         },
         {
             'category_id': 1,
-            'wmo_code_from': 0,
+            'wmo_code_from': 1,
             'wmo_code_to': 3,
-            'wmo_description': 'Mainly clear, partly cloudy, and overcast',
+            'wmo_description': 'Clear sky / Mainly clear, partly cloudy, and overcast',
             'weather_category': 'Clear',
             'is_adverse': 0
         },
@@ -111,7 +113,7 @@ def load_dim_weather():
             'is_adverse': 1
         },
     ])
-
+    conn = get_connection()
     truncate_and_load(weather_categories, "Dim_Weather", conn)
     conn.close()
 
