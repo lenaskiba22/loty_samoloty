@@ -76,6 +76,7 @@ CREATE TABLE Fact_Flights (
     distance             FLOAT,
     cancelled            BIT,
     cancellation_code    VARCHAR(1),
+    cancellation_reason VARCHAR(25),
     diverted             BIT,
     is_delayed           BIT,
     temperature_c        DECIMAL(4,1),
