@@ -190,9 +190,9 @@ def run_quality_checks():
         (
             "Fact_Flights: pokrycie pogoda >= 99%",
             """SELECT CAST(COUNT(weather_category_id) AS FLOAT)
-               / COUNT(*) * 100
+                          / NULLIF(COUNT(*), 0) * 100
                FROM Fact_Flights""",
-            lambda x: x >= 99.0
+            lambda x: x is not None and x >= 99.0
         ),
         (
             "Fact_Flights: cancelled bez NULL",
@@ -246,9 +246,13 @@ def run_quality_checks():
     all_passed = True
     for name, query, condition in tests:
         result = pd.read_sql(query, conn).iloc[0, 0]
-        passed = condition(float(result))
-        status = "PASS" if passed else "FAIL"
-        print(f"  {status}: {name} (wynik: {result:,.2f})")
+        if result is None:
+            passed = False
+            print(f"  FAIL: {name} (wynik: NULL - tabela pusta)")
+        else:
+            passed = condition(float(result))
+            status = "PASS" if passed else "FAIL"
+            print(f"  {status}: {name} (wynik: {result:,.2f})")
         if not passed:
             all_passed = False
 

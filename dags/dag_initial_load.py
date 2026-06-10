@@ -28,8 +28,9 @@ def _load_dim_weather():
     load_dim_weather()
 
 def _load_fact_flights():
-    from etl.fact_flight import load_fact_flights
-    load_fact_flights()
+    from etl.fact_flight import load_Fact_Flights
+    load_Fact_Flights()
+
 
 with DAG(
     dag_id="flight_dw__initial_load",

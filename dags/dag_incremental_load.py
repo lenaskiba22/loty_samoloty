@@ -56,11 +56,11 @@ def _extend_dim_date(**ctx):
     load_dim_date(files=new_files)
 
 def _load_new_facts(**ctx):
-    from etl.fact_flight import load_fact_flights
+    from etl.fact_flight import load_Fact_Flights
     new_files = ctx["ti"].xcom_pull(key="new_files", task_ids="check_new_files")
     if not new_files:
         return
-    load_fact_flights(files=new_files)
+    load_Fact_Flights(files=new_files)
 
 def _mark_files_loaded(**ctx):
     from etl.utils import get_connection

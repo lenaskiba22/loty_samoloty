@@ -9,8 +9,16 @@ def load_dim_weather(files: list[str] | None = None):
 
     weather_categories = pd.DataFrame([
         {
-            'category_id': 1,
+            'category_id': 0,
             'wmo_code_from': 0,
+            'wmo_code_to': 0,
+            'wmo_description': 'Clear sky',
+            'weather_category': 'Clear',
+            'is_adverse': 0
+        },
+        {
+            'category_id': 1,
+            'wmo_code_from': 1,
             'wmo_code_to': 3,
             'wmo_description': 'Clear sky / Mainly clear, partly cloudy, and overcast',
             'weather_category': 'Clear',

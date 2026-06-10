@@ -48,7 +48,7 @@ CREATE TABLE Dim_Weather (
     category_id      INT         PRIMARY KEY,
     wmo_code_from    INT,
     wmo_code_to      INT,
-    wmo_description  VARCHAR(50),  -- oficjalny opis WMO
+    wmo_description  VARCHAR(100),  -- oficjalny opis WMO
     weather_category VARCHAR(20),
     is_adverse       BIT
 );
