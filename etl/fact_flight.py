@@ -61,7 +61,7 @@ def load_Fact_Flights():
     ]
 
     if not new_files:
-        print("Brak nowych plików — pipeline aktualny.")
+        print("Brak nowych plików - pipeline jest aktualny.")
         conn.close()
         return
 
@@ -111,9 +111,12 @@ def load_Fact_Flights():
         "carrier_delay", "weather_delay", "nas_delay",
         "security_delay", "late_aircraft_delay",
         "taxi_out", "taxi_in",
+        "elapsed_time",
         "crs_elapsed_time", "air_time",
         "distance",
-        "cancelled", "cancellation_code", "diverted",
+        "cancelled", "cancellation_code",
+        "cancellation_reason",
+        "diverted",
         "is_delayed",
         "temperature_c", "precipitation_mm", "windspeed_kmh"
     ]
@@ -134,7 +137,7 @@ def load_Fact_Flights():
 
             # transform
 
-            # czyszczenie kodów przed JOINami i filtrowaniem
+            # czyszczenie kodów przed joinaami i filtrowaniem
             df["ORIGIN"] = df["ORIGIN"].str.strip().str.upper()
             df["DEST"]   = df["DEST"].str.strip().str.upper()
             df["OP_UNIQUE_CARRIER"] = df["OP_UNIQUE_CARRIER"].str.strip().str.upper()
@@ -166,7 +169,7 @@ def load_Fact_Flights():
             df = df[mask_origin & mask_dest].copy()
             print(f"  Po filtrowaniu FK lotnisk: {len(df):,} rekordów (odrzucono {before - len(df):,})")
 
-            # JOIN z pogodą po: lotnisko wylotu + data + godzina
+            # join z pogodą po: lotnisko wylotu + data + godzina
             df = df.merge(
                 weather[[
                     "airport_iata", "date", "hour",
@@ -178,6 +181,18 @@ def load_Fact_Flights():
                 how="left"
             )
 
+            # elapsed_time = planowany czas lotu + arr_delay - dep_delay
+            # NULL zostaje automatycznie dla anulowanych
+            df["elapsed_time"] = df["ARR_DELAY"] + df["CRS_ELAPSED_TIME"] - df["DEP_DELAY"]
+
+            # słowna przyczyna anulowania na podstawie dokumentacji z BTS
+            cancellation_map = {
+                "A": "Carrier",
+                "B": "Weather",
+                "C": "National Air System",
+                "D": "Security"
+            }
+            df["cancellation_reason"] = df["CANCELLATION_CODE"].map(cancellation_map)
             # fillna(0) dla kolumn przyczyn opóźnień
             delay_cols = [
                 "CARRIER_DELAY", "WEATHER_DELAY", "NAS_DELAY",
@@ -270,6 +285,7 @@ def load_Fact_Flights():
                 "carrier_delay", "weather_delay", "nas_delay",
                 "security_delay", "late_aircraft_delay",
                 "taxi_out", "taxi_in",
+                "elapsed_time",
                 "crs_elapsed_time", "air_time", "distance",
                 "temperature_c", "precipitation_mm", "windspeed_kmh"
             ]
@@ -279,8 +295,8 @@ def load_Fact_Flights():
                 )
 
             for col in ["airline_code", "origin_airport_code",
-                        "dest_airport_code", "flight_date",
-                        "cancellation_code"]:
+            "dest_airport_code", "flight_date",
+            "cancellation_code", "cancellation_reason"]:
                 result[col] = result[col].apply(
                     lambda x: str(x).strip() if pd.notna(x) else None
                 )
