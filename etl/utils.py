@@ -1,5 +1,5 @@
 import pyodbc
-from etl.config import CONN_STR
+from config import CONN_STR
 
 
 def get_connection():

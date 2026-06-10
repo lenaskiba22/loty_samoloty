@@ -40,8 +40,6 @@ CREATE TABLE Dim_Date (
     day_of_week   VARCHAR(15),
     is_weekend    BIT,
     is_us_holiday BIT,
-    dep_hour      INT,
-    time_block    VARCHAR(20)
 );
 
 CREATE TABLE Dim_Weather (
@@ -81,5 +79,7 @@ CREATE TABLE Fact_Flights (
     is_delayed           BIT,
     temperature_c        DECIMAL(4,1),
     precipitation_mm     DECIMAL(5,2),
-    windspeed_kmh        DECIMAL(5,2)
+    windspeed_kmh        DECIMAL(5,2),
+    dep_hour             INT,
+    time_block           VARCHAR(20)
 );
